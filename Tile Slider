@@ -1,0 +1,478 @@
+Here is the code for my vb game i made.
+you would have to make a layout in order to play.
+
+Imports System.Math
+Imports System.IO
+Public Class Form1
+    Dim PicBoxArray(1000) As PictureBox
+    Dim Oranges As Integer
+    Dim Maze(30, 30) As Integer
+    Dim Orange(30, 30) As Integer
+    Dim Gray(30, 30) As Integer
+    Dim Pink(30, 30) As Integer
+    Dim Access_Point As Point
+    Dim Mouse_Point As Point
+    Dim Index_Pointer As Integer
+    Dim Offset_Point As Point
+    Dim Up_Move, Down_Move, Left_Move, Right_Move As Boolean
+    Dim Mse_Down As Boolean
+    Dim One_Shot As Boolean
+    Dim Initial_Position As Point
+    Dim Game_Over As Boolean
+    Dim Orange_Point, Gray_Point As Point
+    Dim Count As Integer
+    Dim Click_Count As Integer
+    Private Sub PicBoxArray_MouseUp(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs)
+        Dim pbMouseUp As PictureBox = sender
+        Up_Move = False
+        Down_Move = False
+        Left_Move = False
+        Right_Move = False
+        Mse_Down = False
+        'If Game_Over = True Then
+        'MsgBox("Game Over")
+        ' End If
+        If Game_Over <> True Then
+            Moves.Text = Count
+        End If
+        Click_Count = 0
+    End Sub
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Dim Coord As Point
+        Dim X, Y, i As Integer
+        Me.BackColor = System.Drawing.Color.White
+        Me.WindowState = FormWindowState.Maximized
+        Timer1.Start()
+        For R = 0 To 29
+            For C = 0 To 29
+                X = R * 25
+                Y = C * 25
+                Coord.X = X
+                Coord.Y = Y
+                i = i + 1
+                PicBoxArray(i) = New PictureBox
+                PicBoxArray(i).Tag = i
+                PicBoxArray(i).Location = Coord
+                PicBoxArray(i).BackColor = Color.White
+                PicBoxArray(i).Size = New Size(25, 25)
+                PicBoxArray(i).Visible = True
+                PicBoxArray(i).BringToFront()
+                Controls.Add(PicBoxArray(i))
+                AddHandler PicBoxArray(i).MouseDown, AddressOf PicBoxArray_MouseDown
+                AddHandler PicBoxArray(i).MouseUp, AddressOf PicBoxArray_MouseUp
+                AddHandler PicBoxArray(i).MouseMove, AddressOf PicBoxArray_MouseMove
+            Next
+        Next
+    End Sub
+    Private Sub PicBoxArray_MouseDown(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs)
+        Dim pbMouseDown As PictureBox = sender
+        Mse_Down = True
+        Count = Count + 1
+    End Sub
+    Private Sub PicBoxArray_MouseMove(ByVal sender As Object, ByVal e As System.Windows.Forms.MouseEventArgs)
+        Dim pbMouseMove As PictureBox = sender
+        Dim Area_Clear As Boolean = False
+        Dim Tile_Style As Integer
+        If Mse_Down = True Then
+            Initial_Position = Cursor.Position
+            Index_Pointer = pbMouseMove.Tag
+            Access_Point = PicBoxArray(Index_Pointer).Location
+            Select Case PicBoxArray(Index_Pointer).BackColor
+                Case Color.Red
+                    Tile_Style = 1
+                Case Color.Green
+                    Tile_Style = 2
+                    TextBox1.Text = "green1"
+                Case Color.Blue
+                    Tile_Style = 3
+                Case Color.Orange
+                    Tile_Style = 4
+                Case Color.Black
+                    Tile_Style = 5
+                Case Color.Pink
+                    Tile_Style = 6
+                Case Color.Gray
+                    Tile_Style = 7
+            End Select
+            Direction()
+            If Up_Move = True Then
+                Select Case Tile_Style
+                    Case Is = 1, Is = 3
+                        Check_If_Clear(0, -25, Access_Point, Area_Clear)
+                    Case Is = 2
+                        Check_If_Clear(0, -25, Access_Point, Area_Clear)
+                        If Area_Clear <> False Then
+                            Check_If_Clear(25, -25, Access_Point, Area_Clear)
+                        End If
+                    Case Is = 4
+                        Check_If_Orange_Clear(1, Area_Clear)
+                End Select
+                If Area_Clear = True And Tile_Style <> 4 Then
+                    Access_Point.Y = Access_Point.Y - 25
+                    PicBoxArray(Index_Pointer).Location = Access_Point
+                    PicBoxArray(Index_Pointer).BringToFront()
+                End If
+            End If
+            Up_Move = False
+            If Down_Move = True Then
+                TextBox1.Text = "green2"
+                Select Case Tile_Style
+                    Case 1
+                        Check_If_Clear(0, 25, Access_Point, Area_Clear)
+                    Case 2
+                        TextBox1.Text = "green3"
+                        Check_If_Clear(0, 25, Access_Point, Area_Clear)
+                        If Area_Clear <> False Then
+                            Check_If_Clear(25, 25, Access_Point, Area_Clear)
+                            TextBox1.Text = "green4"
+                        End If
+                    Case 3
+                        Check_If_Clear(0, 50, Access_Point, Area_Clear)
+                    Case 4
+                        Check_If_Orange_Clear(2, Area_Clear)
+                End Select
+                If Area_Clear = True And Tile_Style <> 4 Then
+                    Access_Point.Y = Access_Point.Y + 25
+                    PicBoxArray(Index_Pointer).Location = Access_Point
+                    PicBoxArray(Index_Pointer).BringToFront()
+                End If
+                Down_Move = False
+            End If
+            If Left_Move = True Then
+                Select Case Tile_Style
+                    Case Is = 1, Is = 2
+                        Check_If_Clear(-25, 0, Access_Point, Area_Clear)
+                    Case Is = 3
+                        Check_If_Clear(-25, 0, Access_Point, Area_Clear)
+                        If Area_Clear <> False Then
+                            Check_If_Clear(-25, 25, Access_Point, Area_Clear)
+                        End If
+                    Case Is = 4
+                        Check_If_Orange_Clear(3, Area_Clear)
+                End Select
+                If Area_Clear = True And Tile_Style <> 4 Then
+                    Access_Point.X = Access_Point.X - 25
+                    PicBoxArray(Index_Pointer).Location = Access_Point
+                    PicBoxArray(Index_Pointer).BringToFront()
+                End If
+                Left_Move = False
+            End If
+            If Right_Move = True Then
+                Select Case Tile_Style
+                    Case 1
+                        Check_If_Clear(25, 0, Access_Point, Area_Clear)
+                    Case 2
+                        Check_If_Clear(50, 0, Access_Point, Area_Clear)
+                    Case 3
+                        Check_If_Clear(25, 0, Access_Point, Area_Clear)
+                        If Area_Clear <> False Then
+                            Check_If_Clear(25, 25, Access_Point, Area_Clear)
+                        End If
+                    Case 4
+                        Check_If_Orange_Clear(4, Area_Clear)
+                End Select
+                If Area_Clear = True And Tile_Style <> 4 Then
+                    Access_Point.X = Access_Point.X + 25
+                    PicBoxArray(Index_Pointer).Location = Access_Point
+                    PicBoxArray(Index_Pointer).BringToFront()
+                End If
+                Right_Move = False
+            End If
+        End If
+        Check_for_Gray()
+        'System.Threading.Thread.Sleep(200)
+        Mse_Down = False
+    End Sub
+    Public Sub Direction()
+        Dim X_os, Y_os As Integer
+        X_os = Initial_Position.X - Offset_Point.X
+        Y_os = Initial_Position.Y - Offset_Point.Y
+        If Initial_Position.Y <> Offset_Point.Y Then
+            If Y_os < 0 Then
+                Y_os = Y_os * -1
+            End If
+        End If
+        If Initial_Position.X <> Offset_Point.X Then
+            If X_os < 0 Then
+                X_os = X_os * -1
+            End If
+        End If
+        If X_os > Y_os Then
+            If Initial_Position.X > Offset_Point.X Then
+                Right_Move = True
+                Exit Sub
+            Else
+                Left_Move = True
+                Exit Sub
+            End If
+        End If
+        If Y_os > X_os Then
+            If Initial_Position.Y > Offset_Point.Y Then
+                Down_Move = True
+                Exit Sub
+            Else
+                Up_Move = True
+                Exit Sub
+            End If
+        End If
+    End Sub
+    Public Sub Check_If_Clear(X As Integer, Y As Integer, Coord As Point, ByRef Area_Clear As Boolean)
+        Dim Test As Control
+        TextBox2.Text = Coord.X & Coord.Y
+        Coord.X = Coord.X + X
+        Coord.Y = Coord.Y + Y
+        TextBox3.Text = Coord.X & Coord.Y
+        Test = GetChildAtPoint(Coord)
+        If TypeOf Test Is PictureBox Then
+            Select Case Test.BackColor
+                Case Color.Pink, Color.Black, Color.Red, Color.Blue, Color.Orange, Color.Green
+                    Area_Clear = False
+                Case Color.Gray, Color.White
+                    Area_Clear = True
+            End Select
+        End If
+        If Test Is Nothing Then
+            Area_Clear = True
+        End If
+    End Sub
+    Public Sub Check_If_Orange_Clear(D As Integer, ByRef Area_Clear As Boolean)
+        Dim Test As Control
+        Dim Scan_Ref As Point
+        Dim Tile_Style As Integer
+        Dim R, C, X, Y As Integer
+        Dim Whole_Grid As Boolean
+        Dim Pointer As Integer
+        'FILL UP THE "MAZE" WITH
+        'EACH GRID CELL FIRST
+        For R = 0 To 29
+            For C = 0 To 29
+                Orange(R, C) = 0
+                X = R * 25
+                Y = C * 25
+                Scan_Ref.X = X
+                Scan_Ref.Y = Y
+                Test = GetChildAtPoint(Scan_Ref)
+                If TypeOf Test Is PictureBox Then
+                    Select Case Test.BackColor
+                        Case Color.White
+                            Tile_Style = 0
+                        Case Color.Red
+                            Tile_Style = 1
+                        Case Color.Green
+                            Tile_Style = 2
+                        Case Color.Blue
+                            Tile_Style = 3
+                        Case Color.Orange
+                            Tile_Style = 4
+                            Orange(R, C) = 4
+                        Case Color.Black
+                            Tile_Style = 5
+                        Case Color.Pink
+                            Tile_Style = 6
+                        Case Color.Gray
+                            Tile_Style = 7
+                    End Select
+                    Maze(R, C) = Tile_Style
+                Else
+                    Maze(R, C) = 0
+                End If
+            Next
+        Next
+        'NOW BASED ON DIRECTION CHECK TO SEE IF
+        'all CELLS ARE FREE Or ORANGE TO LET
+        'THE WHOLE ARRAY OF ORANGE MOVE
+        Whole_Grid = True
+        For R = 0 To 29
+            For C = 0 To 29
+                If Maze(R, C) = 4 Then
+                    Select Case D
+                        Case 1
+                            'UP
+                            If Maze(R, C - 1) = 0 Or Maze(R, C - 1) = 4 Or Maze(R, C - 1) = 7 Then
+                            Else
+                                Whole_Grid = False
+                            End If
+                        Case 2
+                            'DOWN
+                            If Maze(R, C + 1) = 0 Or Maze(R, C + 1) = 4 Or Maze(R, C + 1) = 7 Then
+                            Else
+                                Whole_Grid = False
+                            End If
+                        Case 3
+                            'LEFT
+                            If Maze(R - 1, C) = 0 Or Maze(R - 1, C) = 4 Or Maze(R - 1, C) = 7 Then
+                            Else
+                                Whole_Grid = False
+                            End If
+                        Case 4
+                            'RIGHT
+                            If Maze(R + 1, C) = 0 Or Maze(R + 1, C) = 4 Or Maze(R + 1, C) = 7 Then
+                            Else
+                                Whole_Grid = False
+                            End If
+                    End Select
+                End If
+                If Whole_Grid = False Then
+                    Exit Sub
+                End If
+            Next
+        Next
+        'If all the orange tiles are free
+        'shift the entire orange array depending on which direction you are going.
+        'reassign the coordinate.
+        If Whole_Grid = True Then
+            For R = 0 To 29
+                For C = 0 To 29
+                    If Maze(R, C) = 4 Then
+                        Scan_Ref.X = R * 25
+                        Scan_Ref.Y = C * 25
+                        Test = GetChildAtPoint(Scan_Ref)
+                        Pointer = Test.Tag
+                        Select Case D
+                            Case 1
+                                Scan_Ref.Y = Scan_Ref.Y - 25
+                            Case 2
+                                Scan_Ref.Y = Scan_Ref.Y + 25
+                            Case 3
+                                Scan_Ref.X = Scan_Ref.X - 25
+                            Case 4
+                                Scan_Ref.X = Scan_Ref.X + 25
+                        End Select
+                        PicBoxArray(Pointer).Location = Scan_Ref
+                        PicBoxArray(Pointer).BringToFront()
+                        Delete_Pink(Scan_Ref)
+                    End If
+                Next
+            Next
+        End If
+        Whole_Grid = False
+    End Sub
+    Public Sub Delete_Pink(Target_Point As Point)
+        Check_Adjacent(Target_Point, 0, -25)
+        Check_Adjacent(Target_Point, 0, 25)
+        Check_Adjacent(Target_Point, -25, 0)
+        Check_Adjacent(Target_Point, 25, 0)
+    End Sub
+    Public Sub Check_for_Gray()
+        Dim R, C As Integer
+        Game_Over = True
+        For R = 0 To 29
+            For C = 0 To 29
+                If Orange(R, C) = 4 Then
+                    If Gray(R, C) = 7 Then
+                        Game_Over = True
+                    Else
+                        Game_Over = False
+                        Exit Sub
+                    End If
+                End If
+            Next
+        Next
+    End Sub
+    Private Sub Create_File_Click(sender As Object, e As EventArgs) Handles File.Click
+        Dim R, C, i, l As Integer
+        Dim di As New IO.DirectoryInfo("C:/Users/walte/")
+        Dim diar1 As IO.FileInfo() = di.GetFiles()
+        Dim dra As IO.FileInfo
+        For Each dra In diar1
+            ListBox1.Items.Add(dra)
+        Next
+        Dim fileReader As String
+        Dim Offset As Integer = 1
+        'Clear_Pallette()
+        If ListBox1.Text <> "" Then
+            If My.Computer.FileSystem.FileExists("C:/Users/walte/" & ListBox1.Text) Then
+                i = 0
+                fileReader = My.Computer.FileSystem.ReadAllText("C:/Users/walte/" & ListBox1.Text)
+                l = Len(fileReader)
+                For R = 0 To 29
+                    For C = 0 To 29
+                        i = i + 1
+                        If Mid(fileReader, Offset, 1) = "0" Then
+                            Maze(R, C) = 0
+                            PicBoxArray(i).BackColor = Color.White
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).Width = 25
+                        End If
+                        If Mid(fileReader, Offset, 1) = "1" Then
+                            Maze(R, C) = 1
+                            PicBoxArray(i).BackColor = Color.Red
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).Width = 25
+                        End If
+                        If Mid(fileReader, Offset, 1) = "2" Then
+                            Maze(R, C) = 2
+                            PicBoxArray(i).BackColor = Color.Green
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).Width = 50
+                        End If
+                        If Mid(fileReader, Offset, 1) = "3" Then
+                            PicBoxArray(i).BackColor = Color.Blue
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Width = 25
+                            PicBoxArray(i).Height = 50
+                        End If
+                        If Mid(fileReader, Offset, 1) = "4" Then
+                            PicBoxArray(i).BackColor = Color.Orange
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Width = 25
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).BorderStyle = BorderStyle.None
+                        End If
+                        If Mid(fileReader, Offset, 1) = "5" Then
+                            PicBoxArray(i).BackColor = Color.Black
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).Width = 25
+                        End If
+                        If Mid(fileReader, Offset, 1) = "6" Then
+                            PicBoxArray(i).BackColor = Color.Pink
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Height = 25
+                            PicBoxArray(i).Width = 25
+                        End If
+                        If Mid(fileReader, Offset, 1) = "7" Then
+                            PicBoxArray(i).BackColor = Color.Gray
+                            PicBoxArray(i).Tag = i
+                            PicBoxArray(i).Width = 25
+                            PicBoxArray(i).Height = 25
+                            Gray(R, C) = 7
+                        End If
+                        Offset = Offset + 1
+                        If Offset <= l Then
+                            Maze(R, C) = CInt(Mid(fileReader, Offset, 1))
+                        End If
+                    Next
+                Next
+            End If
+        End If
+    End Sub
+    Private Sub Check_Adjacent(Target_Point As Point, Offset_X As Integer, Offset_Y As Integer)
+        Dim Adjacent_Object As Object
+        Dim Adjacent_Point As Point
+        Dim Index As Integer
+        Adjacent_Point = Target_Point
+        Adjacent_Point.X = Target_Point.X + Offset_X
+        Adjacent_Point.Y = Target_Point.Y + Offset_Y
+        Adjacent_Object = GetChildAtPoint(Adjacent_Point)
+        Test.Text = Target_Point.X & Target_Point.Y & Adjacent_Point.X & Adjacent_Point.Y
+        If TypeOf Adjacent_Object Is PictureBox Then
+            If Adjacent_Object.BackColor = Color.Pink Then
+                Index = Adjacent_Object.Tag
+                PicBoxArray(Index).BackColor = Color.White
+                PicBoxArray(Index).BringToFront()
+                Exit Sub
+            End If
+        End If
+    End Sub
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        Offset_Point = Cursor.Position
+    End Sub
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Create_File.Click, File.Click
+        Dim myForm As New Form2
+        myForm.Show()
+    End Sub
+End Class
